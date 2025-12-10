@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SocketIoAdapter } from './socket-io-adapter';
 
 async function bootstrap() {
   const logger = new Logger('Main (main.ts)');
@@ -11,7 +12,6 @@ async function bootstrap() {
   const clientPort = parseInt(configService.get('CLIENT_PORT'));
   const port = parseInt(configService.get('PORT'));
   const LOCAL_NETWORK_IP_PATTERN = '192\\.168\\.1\\.([1-9]|[1-9]\\d)';
-  await app.listen(port);
 
   app.enableCors({
     origin: [
@@ -19,6 +19,9 @@ async function bootstrap() {
       new RegExp(`^http://${LOCAL_NETWORK_IP_PATTERN}:${clientPort}$`),
     ],
   });
+  app.useWebSocketAdapter(new SocketIoAdapter(app, configService));
+
+  await app.listen(port);
 
   logger.log(`Server running on port ${port}`);
 }
